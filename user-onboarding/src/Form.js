@@ -32,7 +32,7 @@ export default function UserForm(props) {
 
 <label className='label'>
     I Have Read the Terms of Service
-    <input type="checkbox">
+    <input name='terms' type="checkbox">
     </input>
 </label>
 <br />
