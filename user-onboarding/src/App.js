@@ -5,6 +5,7 @@ import Form from './Form'
 import * as yup from 'yup';
 import schema from './FormSchema';
 import axios from 'axios';
+import User from './User.js'
 
 {/* - [ ] Name
 - [ ] Email
@@ -14,16 +15,16 @@ import axios from 'axios';
 
 
 const initialFormValues = {
-  username: '',
+  first_name: '',
   email: '',
-  password: '',
+  last_name: '',
   terms: false
 };
 
 const initialFormErrors = {
-  username: '',
+  first_name: '',
   email: '',
-  password: '',
+  last_name: '',
 }
 const initialUsers = [];
 const initialDisabled = true;
@@ -37,10 +38,10 @@ function App() {
 
   const getUsers = () => {
     axios
-    .get('http://localhost:3000/users')
+    .get('https://reqres.in/api/users')
     .then((res) => {
-      setUsers(res.data);
-      console.log(res);
+      setUsers(res.data.data);
+      console.log(res.data.data);
     })
     .catch((err) => {
       console.log(err);
@@ -49,9 +50,9 @@ function App() {
 
   const postNewUser = (newUser) => {
     axios
-    .post('http:localhost:3000/users', newUser)
+    .post('https://reqres.in/api/users', newUser)
     .then((res) => {
-      setUsers([ res.data, ...users ]);
+      setUsers([ res.data.data, ...users ]);
       setFormValues(initialFormValues);
     })
     .catch((err) => {
@@ -59,57 +60,76 @@ function App() {
     })
   }
 
+  const inputChange = (name, value) => {
+    yup
+    .reach(schema, name)
+    .validate(value)
+    .then(() => {
+      setFormErrors({
+        ...formErrors,
+        [name] : ''
+      });
+    })
+    .catch((err) => {
+      setFormErrors({
+        ...formErrors,
+        [name] : err.errors[0]
+      });
+    });
+
+    setFormValues({
+      ...formValues,
+      [name] : value
+    });
+
+    }
+
+
+
   const formSubmit = () => {
     const newUser = {
-      username: formValues.username.trim(),
+      first_name: formValues.first_name.trim(),
       email: formValues.email.trim(),
-      password: formValues.password.trim(),
+      last_name: formValues.last_name.trim(),
+      // terms : ''
       // WHAT ABOUT TERMS?
     };
     postNewUser(newUser);
   }
 
 
-  // useEffect(() => {
-  //   getUsers();
-  // }, []);
+  useEffect(() => {
+    getUsers();
+  }, []);
 
   useEffect(() => {
     schema.isValid(formValues).then((valid) => {
-      setDisabled(valid)
+      setDisabled(!valid)
     });
   }, [formValues] )
 
-        const inputChange = (name, value) => {
-      yup
-      .reach(schema, name)
-      .validate(value)
-      .then(() => {
-        setFormErrors({
-          ...formErrors,
-          [name] : ''
-        });
-      })
-      .catch((err) => {
-        setFormErrors({
-          ...formErrors,
-          [name] : err.errors[0]
-        });
-      });
 
-      setFormValues({
-        ...formValues,
-        [name] : value
-      });
 
-      }
+console.log('users',users);
 
 
   return (
     <div className="App">
  
-      <Form />
+      <Form 
+      values={formValues}
+      change={inputChange}
+      submit={formSubmit}
+      disabled={disabled}
+      errors={formErrors}
+      />
+      {users.map((user) => {
+        console.log(user);
+        // debugger
+        return (<User key={user} details={user} />);
+      })}
     </div>
+    
   );
 }
 
